@@ -3,6 +3,8 @@ package com.nanhua.nhpims.webservice;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +42,7 @@ public class WebService {
 	// 命令名
 	private static final String CMD_USER_LOGIN = "UL"; // 用户登录
 	private static final String CMD_QUERY_PRODUCT = "QP"; // 查询产品
+	private static final String CMD_DELIVERY_REGISTER = "DR"; // 发货登记
 	// 根节点
 	private static final String NODE_ROOT = "nhroot";
 	// 命令节点
@@ -270,7 +273,7 @@ public class WebService {
                 }
 			} else {
 				// 没有数据
-				proInfo = null;
+				proInfo.proNum = null;
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -283,6 +286,122 @@ public class WebService {
 	}
 
 	// 发货登记
+	public static void deliveryRegister(String[] proNumArray, ArrayList<String> delRegResList, WsErr err) {
+
+		String in = "";
+		String out = "";
+		
+		// 拼接字符串，逗号分隔（最后不带逗号）
+		String proNumWithComma = proNumArray[0];
+		for (int i=1; i<proNumArray.length; ++i) {
+			proNumWithComma += "," + proNumArray[i];
+		}
+		
+		// 发货登记结果
+		String delRegResWithComma = "";
+
+		DocumentBuilderFactory builderFactory = DocumentBuilderFactory
+				.newInstance();
+		// 创建xml
+		try {
+			DocumentBuilder builder = builderFactory.newDocumentBuilder();
+
+			Document document = builder.newDocument();
+			// 建立根节点
+			Element rootNode = document.createElement(NODE_ROOT);
+			// 添加到document
+			document.appendChild(rootNode);
+			// 建立命令节点
+			Element cmdNode = document.createElement(NODE_CMD);
+			cmdNode.setTextContent(CMD_DELIVERY_REGISTER);
+			// 添加到document
+			rootNode.appendChild(cmdNode);
+			// 建立数据节点
+			Element dataNode = document.createElement(NODE_DATA);
+			// 添加到document
+			rootNode.appendChild(dataNode);
+			// 其它数据
+			Element proNumNode = document.createElement("productnumber");
+			proNumNode.setTextContent(proNumWithComma);
+			dataNode.appendChild(proNumNode);
+
+			// 设置输出结果
+			DOMSource domSource = new DOMSource(document);
+			StringWriter writer = new StringWriter();
+			StreamResult result = new StreamResult(writer);
+			TransformerFactory factory = TransformerFactory.newInstance();
+			Transformer transformer = factory.newTransformer();
+			// 开始把Document映射到result
+			transformer.transform(domSource, result);
+
+			in = writer.toString();
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			err.errCode = "1";
+			err.errMsg = "创建xml异常：" + e.getMessage();
+			return;
+		}
+
+		out = comApi(in);
+		if (null == out) {
+			err.errCode = WsErr.ERR_CODE_CNT;
+			err.errMsg = WsErr.ERR_MSG_CNT;
+			return;
+		}
+
+		// 解析xml
+		try {
+			// 得到DocumentBuilder对象
+			DocumentBuilder builder = builderFactory.newDocumentBuilder();
+			// 得到代表整个xml的Document对象
+			InputStream stream = new ByteArrayInputStream(out.getBytes("UTF-8"));
+			Document document = builder.parse(stream);
+			// 得到根节点
+			Element root = document.getDocumentElement();
+			// 获取根节点中的所有的节点
+			NodeList errCodeList = root.getElementsByTagName(NODE_ERRCODE);
+			if (0 != errCodeList.getLength()) {
+				Node node = (Element) errCodeList.item(0);
+				err.errCode = node.getTextContent();
+			}
+			NodeList errMsgList = root.getElementsByTagName(NODE_ERRMSG);
+			if (0 != errMsgList.getLength()) {
+				Node node = errMsgList.item(0);
+				err.errMsg = "远程:" + node.getTextContent();
+			}
+			NodeList dataList = root.getElementsByTagName(NODE_DATA);
+			if (0 != dataList.getLength()) {
+				Node node = dataList.item(0);
+				NodeList childList = node.getChildNodes();
+				if (0 != childList.getLength()) {
+					Node childNode = childList.item(0);
+					if (Node.ELEMENT_NODE == childNode.getNodeType()) {
+						if ("deliveryregisterresult".equals(childNode.getNodeName())) {
+							delRegResWithComma = childNode.getFirstChild()
+									.getNodeValue();
+							
+							// 解释逗号分隔字符串
+							String[] delRegResArray = delRegResWithComma.split(",");
+							for (int i=0; i<delRegResArray.length; ++i) {
+								delRegResList.add(delRegResArray[i]);
+							}
+						} 
+					}
+				}
+			} else {
+				// 没有数据
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.err.println(e.toString());
+			err.errCode = "1";
+			err.errMsg = "解析xml异常：" + e.getMessage();
+			return;
+		}
+
+	}
 
 	// 通用接口
 	public static String comApi(String in) {

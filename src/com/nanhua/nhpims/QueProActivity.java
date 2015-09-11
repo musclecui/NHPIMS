@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
@@ -34,6 +35,7 @@ public class QueProActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 		setContentView(R.layout.activity_que_pro);
 
 		etProNum = (EditText) findViewById(R.id.etProNum);
@@ -133,7 +135,7 @@ public class QueProActivity extends Activity {
 		WsErr err = new WsErr();
 		WebService.queryProduct(proNum, proInfo, err);
 		if (err.errCode.equals(WsErr.ERR_NO)) {
-			if (null != proInfo) {
+			if (null != proInfo.proNum) {
 				setProInfo(proInfo);
 			} else {
 				onClick_Clear();

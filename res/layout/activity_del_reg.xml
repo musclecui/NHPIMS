@@ -1,52 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".DelRegActivity" >
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/enter_pronum_del" />
-
     <LinearLayout
+        android:id="@+id/area1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center" 
-        android:padding="5dip">
+        android:orientation="vertical" >
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/pro_num"
-            android:textColor="#0000ff"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/etProNum"
+            android:id="@+id/textView1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="10" >
+            android:gravity="center"
+            android:text="@string/enter_pronum_del" />
 
-            <requestFocus />
-        </EditText>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="5dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_num"
+                android:textColor="#0000ff"
+                android:textSize="20sp" />
+
+            <EditText
+                android:id="@+id/etProNum"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10" >
+
+                <requestFocus android:layout_width="wrap_content" />
+            </EditText>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/btnScan"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_blue"
+                android:text="@string/scan"
+                android:textColor="@color/btn_txt_white" />
+
+            <Space
+                android:layout_width="40dp"
+                android:layout_height="match_parent" />
+
+            <Button
+                android:id="@+id/btnAdd"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_blue"
+                android:text="@string/add"
+                android:textColor="@color/btn_txt_white" />
+        </LinearLayout>
+
+        <!-- 分割线 -->
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="1dp"
+            android:layout_marginRight="1dp"
+            android:layout_marginTop="20dp"
+            android:background="#ADADAD"
+            android:orientation="horizontal" >
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- 上标题 -->
+
     <LinearLayout
+        android:id="@+id/topTitle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#C0C0C0"
+        android:orientation="horizontal"
+        android:padding="6dip"
+        android:layout_below="@+id/area1" >
+
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="删除"
+            android:textColor="#616130"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/pro_num"
+            android:textColor="#616130"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/model"
+            android:textColor="#616130"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+    
+    <!-- 待发货列表 -->
+
+    <ListView
+        android:id="@+id/lvProToDel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/topTitle"
+        android:layout_above="@+id/bottom"
+        android:background="#FFF5EE">
+    </ListView>  
+    
+    <!-- 下标题 -->
+
+    <LinearLayout
+        android:id="@+id/bottomTitle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#C0C0C0"
+        android:orientation="horizontal"
+        android:padding="3dip"
+        android:layout_above="@+id/bottom">
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="left"
+            android:text="下标题"
+            android:textColor="#616130"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>    
+    
+    <!-- 底部 -->
+    
+    <LinearLayout
+        android:id="@+id/bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp"
         android:gravity="center" >
 
         <Button
-            android:id="@+id/btnScan"
+            android:id="@+id/btnClear"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_blue"
-            android:text="@string/scan"
+            android:text="@string/clear"
             android:textColor="@color/btn_txt_white" />
 
         <Space
@@ -54,98 +178,13 @@
             android:layout_height="match_parent" />
 
         <Button
-            android:id="@+id/btnAdd"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/btn_blue"
-            android:text="@string/add"
-            android:textColor="@color/btn_txt_white" />
-    </LinearLayout>
-    
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="20dp" >
-    </Space>
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <Button
-            android:id="@+id/btnClear"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/btn_blue"
-            android:text="@string/clear"
-            android:textColor="@color/btn_txt_white" />
-
-        <Button
             android:id="@+id/btnDelivery"
-            android:layout_width="80dp"
+            android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:background="@drawable/btn_blue"
             android:text="@string/delivery"
             android:textColor="@color/btn_txt_white" />
-
     </LinearLayout>
     
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="5dp" >
-    </Space>
-
-    <!-- 待发货列表 -->
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="#FFF5EE"
-        android:orientation="vertical" >
-
-        <!-- 标题 -->
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="#AAAAFF"
-            android:padding="6dip" >
-
-            <TextView
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="删除"
-                android:textColor="#616130"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="130dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="产品编号"
-                android:textColor="#616130"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="产品型号"
-                android:textColor="#616130"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <ListView
-            android:id="@+id/lvProToDel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-        </ListView>
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

@@ -44,6 +44,8 @@
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:windowSoftInputMode="stateAlwaysHidden" >
         </activity>
+        <activity android:name="com.nanhua.nhpims.DelRegResActivity" >
+        </activity>        
 </application>
 
 </manifest>

@@ -33,5 +33,6 @@
     <string name="enter_pronum_del">请输入或扫描要发货的产品编号</string>
     <string name="add">增 加</string>
     <string name="delivery">发 货</string>
+    <string name="model">型号</string>
     
 </resources>
