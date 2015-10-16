@@ -8,9 +8,13 @@ import com.nanhua.nhpims.webservice.*;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -21,21 +25,22 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.PopupWindow;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 public class UserLoginActivity extends Activity {
 
 	private static final String MOD_NAME = "用户登录"; // 模块名
-	Button btnLogin;
-	EditText etUserName;
-	EditText etPassword;
-	Menu menu;
+	private Button btnLogin;
+	private EditText etUserName;
+	private EditText etPassword;
+	private Menu menu;
 	private int menuItemId = Menu.FIRST;
-	ShaPreOpe shaPreOpe;
+	private ShaPreOpe shaPreOpe;
+	private Handler handler;
+	private ProgressDialog progressDialog;
+
+	private static final int MSG_WHAT_LOGIN_SUCCESS = 1;
+	private static final int MSG_WHAT_LOGIN_FAILED = 2;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,12 +52,44 @@ public class UserLoginActivity extends Activity {
 		etPassword = (EditText) findViewById(R.id.etPassword);
 
 		shaPreOpe = new ShaPreOpe(ContextUtil.getInstance());
-		
+
 		String lastUserName = shaPreOpe.read("username", "");
 		etUserName.setText(lastUserName);
 		if ("" != lastUserName) {
 			etPassword.requestFocus();
 		}
+
+		handler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				switch (msg.what) {
+				case MSG_WHAT_LOGIN_SUCCESS: {
+					// 登录成功
+					progressDialog.dismiss(); //进度条消失
+					final String userName = msg.getData().getString("userName"); // 接受msg传递过来的参数
+					// 保存最近成功登录用户
+					shaPreOpe.write("username", userName);
+
+					Intent intent = new Intent(UserLoginActivity.this,
+							FunSelActivity.class);
+					startActivity(intent);
+					finish(); // 关闭本页面
+					break;
+				}
+				case MSG_WHAT_LOGIN_FAILED: {
+					// 登录失败
+					progressDialog.dismiss(); //进度条消失
+					final String errMsg = msg.getData().getString("errMsg"); // 接受msg传递过来的参数
+					new AlertDialog.Builder(UserLoginActivity.this)
+							.setTitle(MOD_NAME).setMessage(errMsg)
+							.setPositiveButton("确定", null).show();
+					break;
+				}
+				default:
+					break;
+				}
+			}
+		};
 
 		btnLogin.setOnClickListener(new OnClickListener() {
 
@@ -85,121 +122,58 @@ public class UserLoginActivity extends Activity {
 							.setPositiveButton("确定", null).show();
 					return;
 				}
-
-				WsErr err = new WsErr();
-				WebService.UserLogin(userName, password, GloVar.curUser, err);
-				if (err.errCode.equals(WsErr.ERR_NO)) {
-					// 登录成功
-
-					// 保存最近成功登录用户
-					shaPreOpe.write("username", userName);
-					
-					Intent intent = new Intent(UserLoginActivity.this,
-							FunSelActivity.class);
-					startActivity(intent);
-					finish(); // 关闭本页面
-				} else {
-					// 登录失败
-
-					new AlertDialog.Builder(UserLoginActivity.this)
-							.setTitle(MOD_NAME).setMessage(err.errMsg)
-							.setPositiveButton("确定", null).show();
-				}
 				
-//				LayoutInflater inflater = (LayoutInflater) UserLoginActivity.this
-//						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//				final View vPopupWin = inflater.inflate(
-//						R.layout.dialog_popup, null, false);
-//				final PopupWindow pw = new PopupWindow(vPopupWin, 600, 400,
-//						true);
-//				Button btnOk = (Button) vPopupWin.findViewById(R.id.btnOk);
-//				Button btnCancel = (Button) vPopupWin
-//						.findViewById(R.id.btnCancel);
-//				TextView tvTip = (TextView) vPopupWin
-//						.findViewById(R.id.tvTip);
-//				tvTip.setText(err.errMsg);
-//				btnOk.setOnClickListener(new OnClickListener() {
+				// 显示ProgressDialog
+				progressDialog = ProgressDialog.show(UserLoginActivity.this, "请稍候", "正在登录...", true, false);
+				
+				Thread userLoginThead = new Thread() {
+					@Override
+					public void run() {
+						
+						final String userName = etUserName.getText().toString();
+						final String password = etPassword.getText().toString();
+						
+						WsErr err = new WsErr();
+						WebService.UserLogin(userName, password, GloVar.curUser, err);
+						if (err.errCode.equals(WsErr.ERR_NO)) {
+							// 登录成功
+							Message msg = new Message();
+							Bundle bundle = new Bundle();
+							bundle.putString("userName", userName); // 往Bundle中存放数据
+							msg.setData(bundle);// msg利用Bundle传递数据
+							msg.what = MSG_WHAT_LOGIN_SUCCESS;
+							handler.sendMessage(msg);
+						} else {
+							// 登录失败
+							Message msg = new Message();
+							Bundle bundle = new Bundle();
+							bundle.putString("errMsg", err.errMsg); // 往Bundle中存放数据
+							msg.setData(bundle);// msg利用Bundle传递数据
+							msg.what = MSG_WHAT_LOGIN_FAILED;
+							handler.sendMessage(msg);
+						}
+					}
+				};
+				userLoginThead.start();	
+
+//				WsErr err = new WsErr();
+//				WebService.UserLogin(userName, password, GloVar.curUser, err);
+//				if (err.errCode.equals(WsErr.ERR_NO)) {
+//					// 登录成功
 //
-//					@Override
-//					public void onClick(View v) {
-//						// TODO Auto-generated method stub
-//						pw.dismiss();
-//					}
-//				});
-//				btnCancel.setOnClickListener(new OnClickListener() {
+//					// 保存最近成功登录用户
+//					shaPreOpe.write("username", userName);
 //
-//					@Override
-//					public void onClick(View v) {
-//						// TODO Auto-generated method stub
-//						pw.dismiss();
-//					}
-//				});
-//				pw.showAtLocation(v, Gravity.CENTER, 0, 0);	
-				
-				
-
-				// SimpleDateFormat df = new
-				// SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置日期格式
-				// Date dt = new Date();
-
-				// AlertDialog.Builder builder = new
-				// AlertDialog.Builder(UserLoginActivity.this);
-				// builder.setTitle(R.string.app_name);
-				// builder.setIcon(R.drawable.home);
-				// builder.setMessage("你正在登录");
-				// builder.setPositiveButton("确定", new
-				// DialogInterface.OnClickListener() {
-				//
-				// @Override
-				// public void onClick(DialogInterface dialog, int which) {
-				// // TODO Auto-generated method stub
-				// Toast.makeText(UserLoginActivity.this, "你按了确定",
-				// Toast.LENGTH_LONG).show();
-				// }
-				// });
-				// builder.setNegativeButton("取消", new
-				// DialogInterface.OnClickListener() {
-				//
-				// @Override
-				// public void onClick(DialogInterface dialog, int which) {
-				// // TODO Auto-generated method stub
-				// Toast.makeText(UserLoginActivity.this, "你按了取消",
-				// Toast.LENGTH_LONG).show();
-				// }
-				// });
-				// builder.create().show();
-
-				// EditText etUserName =
-				// (EditText)findViewById(R.id.etUserName);
-				// EditText etPassword =
-				// (EditText)findViewById(R.id.etPassword);
-				// String userName = etUserName.getText().toString();
-				// String password = etPassword.getText().toString();
-				// String s = userName + password;
-				// Intent intent = new Intent(UserLoginActivity.this,
-				// ToDetVehActivity.class);
-				// Bundle bundle = new Bundle();
-				// bundle.putString("1", "One");
-				// bundle.putString("2", "Two");
-				// bundle.putString("3", "Three");
-				// bundle.putInt("4", 4);
-				// intent.putExtras(bundle);
-				// startActivity(intent);
-				// finish();
-
-				// int i = 1;
-				// float f = 2.2f;
-				// String s = "hello -";
-				// s += df.format(dt);
-				// s += "-";
-				// s += String.valueOf(true);
-				// s += "-";
-				// s += String.valueOf(i);
-				// s += "-";
-				// s += String.valueOf(f);
-				// Toast tst = Toast.makeText(UserLoginActivity.this, s,
-				// Toast.LENGTH_LONG);
-				// tst.show();
+//					Intent intent = new Intent(UserLoginActivity.this,
+//							FunSelActivity.class);
+//					startActivity(intent);
+//					finish(); // 关闭本页面
+//				} else {
+//					// 登录失败
+//					new AlertDialog.Builder(UserLoginActivity.this)
+//					.setTitle(MOD_NAME).setMessage(err.errMsg)
+//					.setPositiveButton("确定", null).show();
+//				}
 			}
 		});
 	}
@@ -246,11 +220,9 @@ public class UserLoginActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 
-		Log.d("你点击了", String.valueOf(item.getItemId()));
-		// new
-		// AlertDialog.Builder(UserLoginActivity.this).setMessage("你点击了“"+item.getTitle()+"”").show();
-		Toast.makeText(this, "你点击了“" + item.getTitle() + "”",
-				Toast.LENGTH_SHORT).show();
+		// Log.d("你点击了", String.valueOf(item.getItemId()));
+		// Toast.makeText(this, "你点击了“" + item.getTitle() + "”",
+		// Toast.LENGTH_SHORT).show();
 
 		switch (item.getItemId()) {
 		case 1:
@@ -276,18 +248,31 @@ public class UserLoginActivity extends Activity {
 		startActivity(new Intent(this, SettingActivity.class));
 	}
 
-	// // 拦截/屏蔽返回键、菜单键实现代码
-	// @Override
-	// public boolean onKeyDown(int keyCode, KeyEvent event) {
-	// if(keyCode == KeyEvent.KEYCODE_BACK) {
-	// //监控/拦截/屏蔽返回键
-	// return false;
-	// } else if(keyCode == KeyEvent.KEYCODE_MENU) {
-	// //监控/拦截菜单键
-	// return false;
-	// } else if(keyCode == KeyEvent.KEYCODE_HOME) {
-	// //由于Home键为系统键，此处不能捕获，需要重写onAttachedToWindow()
-	// }
-	// return super.onKeyDown(keyCode, event);
-	// }
+	// 拦截/屏蔽返回键、菜单键实现代码
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			// 监控/拦截/屏蔽返回键
+
+			new AlertDialog.Builder(this)
+					.setTitle(MOD_NAME)
+					.setMessage("确定退出？")
+					.setPositiveButton("确定",
+							new DialogInterface.OnClickListener() {
+
+								@Override
+								public void onClick(DialogInterface dialog,
+										int which) {
+									// TODO Auto-generated method stub
+									finish();
+									System.exit(0);
+								}
+							}).setNegativeButton("取消", null).show();
+		} else if (keyCode == KeyEvent.KEYCODE_MENU) {
+			// 监控/拦截菜单键
+		} else if (keyCode == KeyEvent.KEYCODE_HOME) {
+			// 由于Home键为系统键，此处不能捕获，需要重写onAttachedToWindow()
+		}
+		return super.onKeyDown(keyCode, event);
+	}
 }
