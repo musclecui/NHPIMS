@@ -177,6 +177,14 @@ public class UserLoginActivity extends Activity {
 			}
 		});
 	}
+	
+	@Override
+	protected void onDestroy() {
+		// Remove all Runnable and Message.
+		handler.removeCallbacksAndMessages(null);
+
+		super.onDestroy();
+	}	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
